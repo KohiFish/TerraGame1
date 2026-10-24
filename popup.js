@@ -152,3 +152,4 @@ window.addEventListener('load', () => {
     spawnTimer = setInterval(spawnTarget, 1200);
     gameLoop();
 });
+test again
