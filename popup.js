@@ -75,6 +75,8 @@ window.addEventListener('load', () => {
     // Game logic down here
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    const GAME_WIDTH = canvas.width;
+    const GAME_HEIGHT = canvas.height;
 
     let score = 0;
     let gameOver = false;
@@ -91,18 +93,19 @@ window.addEventListener('load', () => {
     const lasers = [];
     const targets = [];
     const keys = {};
+    const shootInterval = 400;
+    let lastShotTime = -shootInterval;
 
-    document.addEventListener('keydown', (event) => {
+    window.addEventListener('keydown', (event) => {
         keys[event.code] = true;
+
         if (event.code === 'Space') {
             event.preventDefault();
-            sound.init();
-            shootLaser();
-            sound.playerLaser();
+            if (!event.repeat) sound.init();
         }
     });
 
-    document.addEventListener('keyup', (event) => {
+    window.addEventListener('keyup', (event) => {
         keys[event.code] = false;
     });
 
@@ -115,6 +118,7 @@ window.addEventListener('load', () => {
             height: 12,
             speed: 7
         });
+        sound.playerLaser();
     }
 
     function spawnTarget() {
@@ -143,6 +147,12 @@ window.addEventListener('load', () => {
         }
         if (keys.ArrowRight || keys.KeyD) {
             player.x = Math.min(canvas.width - player.width, player.x + player.speed);
+        }
+
+        const now = performance.now();
+        if (keys.Space && now - lastShotTime >= shootInterval) {
+            lastShotTime = now;
+            shootLaser();
         }
 
         for (let i = lasers.length - 1; i >= 0; i--) {
@@ -206,16 +216,16 @@ window.addEventListener('load', () => {
         });
 
         ctx.fillStyle = '#FFE81F';
-        ctx.font = '20px Arial, sans-serif';
+        ctx.font = '20px Fantasque Sans Mono';
         ctx.textAlign = 'left';
         ctx.fillText(`SCORE: ${score}`, 10, 25);
 
         if (gameOver) {
             ctx.fillStyle = '#FF0055';
-            ctx.font = '20px Arial, sans-serif';
+            ctx.font = '20px Fantasque Sans Mono';
             ctx.textAlign = 'center';
             ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
-            ctx.font = '16px Arial, sans-serif';
+            ctx.font = '16px Fantasque Sans Mono';
             ctx.fillStyle = '#FFFFFF';
             ctx.fillText('Try Again', canvas.width / 2, canvas.height / 2 + 40);
         }
