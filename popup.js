@@ -120,17 +120,21 @@ function draw() {
     if (gameOver) {
         ctx.fillStyle = '#FF0055';
         ctx.font = '20px Fantasque Sans Mono';
-
-    
-
-
-
-
+        ctx.textAlign = 'center';
+        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+        ctx.font = '16px Fantasque Sans Mono';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText('Please Reload to try again', canvas.width / 2, canvas.height / 2 + 40);
+    }
 }
 
 
-
-
+function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+gameLoop();
 
 
 
