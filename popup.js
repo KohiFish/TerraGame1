@@ -1,4 +1,78 @@
 window.addEventListener('load', () => {
+    // Sound system up here
+    class SoundSystem {
+        constructor() {
+            this.ctx = null;
+            this.enabled = true;
+        }
+        init() {
+            if (!this.ctx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) {
+                    console.error('Web Audio API is not supported in this browser.');
+                    return false;
+                }
+                this.ctx = new AudioCtx();
+            }
+            if (this.ctx.state === 'suspended') {
+                this.ctx.resume().catch((error) => {
+                    console.error('Unable to resume the audio context:', error);
+                });
+            }
+            return true;
+        }
+
+        playerLaser(isEnemy = false) {
+            if (!this.enabled || !this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = isEnemy ? 'sawtooth' : 'square';
+            const now = this.ctx.currentTime;
+            if (isEnemy) {
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.15);
+            } else {
+                osc.frequency.setValueAtTime(880, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now +0.12);
+            }
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now +0.15);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        }
+
+        playExplosion(isLarge = false) {
+            if (!this.enabled || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const duration = isLarge ? 0.6 : 0.3;
+            const bufferSize = this.ctx.sampleRate * duration;
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = buffer;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(isLarge ? 400 : 800, now);
+            filter.frequency.exponentialRampToValueAtTime(30, now + duration);
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.ctx.destination);
+            noise.start(now);
+            noise.stop(now + duration);
+        }
+    }
+    const sound = new SoundSystem();
+
+    // Game logic down here
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -22,7 +96,9 @@ window.addEventListener('load', () => {
         keys[event.code] = true;
         if (event.code === 'Space') {
             event.preventDefault();
+            sound.init();
             shootLaser();
+            sound.playerLaser();
         }
     });
 
@@ -83,6 +159,7 @@ window.addEventListener('load', () => {
             if (circleTouchesRect(target, player)) {
                 gameOver = true;
                 clearInterval(spawnTimer);
+                sound.playExplosion(true);
                 return;
             }
 
@@ -92,6 +169,7 @@ window.addEventListener('load', () => {
                     targets.splice(i, 1);
                     lasers.splice(j, 1);
                     score += 10;
+                    sound.playExplosion();
                     hit = true;
                     break;
                 }
@@ -152,4 +230,3 @@ window.addEventListener('load', () => {
     spawnTimer = setInterval(spawnTarget, 1200);
     gameLoop();
 });
-test again
