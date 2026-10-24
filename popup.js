@@ -79,15 +79,17 @@ window.addEventListener('load', () => {
     const GAME_HEIGHT = canvas.height;
 
     let score = 0;
+    let lives = 3
     let gameOver = false;
-    let spawnTimer;
+    let frameCount = 0;
 
     const player = {
         x: canvas.width / 2 - 10,
         y: canvas.height - 50,
         width: 20,
         height: 20,
-        speed: 8
+        speed: 8,
+        invulnerable: 0
     };
 
     const lasers = [];
@@ -96,12 +98,28 @@ window.addEventListener('load', () => {
     const shootInterval = 400;
     let lastShotTime = -shootInterval;
 
+    function resetGame() {
+        score = 0;
+        lives = 3;
+        gameOver= false;
+        frameCount = 0;
+        player.x = canvas.width / 2 - player.width / 2;
+        player.invulnerable = 0;
+        lasers.length = 0;
+        target.length = 0;
+        lastShotTime = -shootInterval;
+    }
+
     window.addEventListener('keydown', (event) => {
         keys[event.code] = true;
 
         if (event.code === 'Space') {
             event.preventDefault();
             if (!event.repeat) sound.init();
+        }
+        if (event.code === 'Enter') {
+            sound.init();
+            resetGame();
         }
     });
 
@@ -145,6 +163,10 @@ window.addEventListener('load', () => {
         if (keys.ArrowLeft || keys.KeyA) {
             player.x = Math.max(0, player.x - player.speed);
         }
+        frameCount++;
+        if (frameCount % 72 === 0) spawnTarget();
+        if (player.invulnerable > 0) player.invulnerable--;
+
         if (keys.ArrowRight || keys.KeyD) {
             player.x = Math.min(canvas.width - player.width, player.x + player.speed);
         }
@@ -166,11 +188,16 @@ window.addEventListener('load', () => {
             const target = targets[i];
             target.y += target.speed;
 
-            if (circleTouchesRect(target, player)) {
-                gameOver = true;
-                clearInterval(spawnTimer);
+            if (player.invulnerable === 0 && circleTouchesRect(target, player)) {
+                targets.splice(i, 1);
+                lives--;
                 sound.playExplosion(true);
-                return;
+                if (lives <= 0) {
+                    gameOver = true;
+                    return;
+                }
+                player.invulnerable = 90;
+                continue;
             }
 
             let hit = false;
@@ -195,13 +222,17 @@ window.addEventListener('load', () => {
         ctx.fillStyle = '#050510';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ctx.fillStyle = '#2196F3';
-        ctx.beginPath();
-        ctx.moveTo(player.x + player.width / 2, player.y);
-        ctx.lineTo(player.x, player.y + player.height);
-        ctx.lineTo(player.x + player.width, player.y + player.height);
-        ctx.closePath();
-        ctx.fill();
+
+        if (player.invulnerable % 6 <= 3) {
+            ctx.fillStyle = '#2196F3';
+            ctx.beginPath();
+            ctx.moveTo(player.x + player.width / 2, player.y);
+            ctx.lineTo(player.x, player.y + player.height);
+            ctx.lineTo(player.x + player.width, player.y + player.height);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
 
         ctx.fillStyle = '#FFE81F';
         lasers.forEach((laser) => {
@@ -219,6 +250,8 @@ window.addEventListener('load', () => {
         ctx.font = '20px Fantasque Sans Mono';
         ctx.textAlign = 'left';
         ctx.fillText(`SCORE: ${score}`, 10, 25);
+        ctx.textAlign = 'right';
+        ctx.fillText(`LIVES: ${lives}`, canvas.width - 10, 25);
 
         if (gameOver) {
             ctx.fillStyle = '#FF0055';
@@ -227,7 +260,7 @@ window.addEventListener('load', () => {
             ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
             ctx.font = '16px Fantasque Sans Mono';
             ctx.fillStyle = '#FFFFFF';
-            ctx.fillText('Try Again', canvas.width / 2, canvas.height / 2 + 40);
+            ctx.fillText('Press ENTER to try again', canvas.width / 2, canvas.height / 2 + 40);
         }
     }
 
@@ -237,6 +270,5 @@ window.addEventListener('load', () => {
         requestAnimationFrame(gameLoop);
     }
 
-    spawnTimer = setInterval(spawnTarget, 1200);
     gameLoop();
 });
