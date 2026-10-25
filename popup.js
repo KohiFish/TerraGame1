@@ -85,9 +85,9 @@ window.addEventListener('load', () => {
 
     const player = {
         x: canvas.width / 2 - 10,
-        y: canvas.height - 50,
-        width: 20,
-        height: 20,
+        y: canvas.height - 100,
+        width: 44,
+        height: 48,
         speed: 8,
         invulnerable: 0
     };
@@ -95,7 +95,7 @@ window.addEventListener('load', () => {
     const lasers = [];
     const targets = [];
     const keys = {};
-    const shootInterval = 400;
+    const shootInterval = 350;
     let lastShotTime = -shootInterval;
 
     function resetGame() {
@@ -129,12 +129,15 @@ window.addEventListener('load', () => {
 
     function shootLaser() {
         if (gameOver) return;
-        lasers.push({
-            x: player.x + player.width / 2 - 2,
-            y: player.y,
-            width: 4,
-            height: 12,
-            speed: 7
+        const centerX = player.x + player.width / 2;
+        [-26, 22].forEach((offset) => {
+            lasers.push({
+                x: centerX + offset,
+                y: player.y,
+                width: 4,
+                height: 12,
+                speed: 7
+             });
         });
         sound.playerLaser();
     }
@@ -143,11 +146,21 @@ window.addEventListener('load', () => {
         if (gameOver) return;
 
         const radius = Math.random() * 20 + 15;
+        const points = [];
+        const numPoints = 8 + Math.floor(Math.random() * 4);
+        for (let i = 0; i < numPoints; i++) {
+            const angle = (i / numPoints) * Math.PI * 2;
+            const dist = radius * (0.7 + Math.random() * 0.5);
+            points.push({ x: Math.cos(angle) * dist, y: Math.sin(angle) * dist }); 
+        }
         targets.push({
             x: Math.random() * (canvas.width - radius * 2) + radius,
             y: -radius,
             radius,
-            speed: Math.random() * 2 + 1.5
+            speed: Math.random() * 2 + 1.5,
+            rotation: 0,
+            rotSpeed: (Math.random() - 0.5) * 0.05,
+            points
         });
     }
 
@@ -187,6 +200,7 @@ window.addEventListener('load', () => {
         for (let i = targets.length - 1; i >= 0; i--) {
             const target = targets[i];
             target.y += target.speed;
+            target.rotation += target.rotSpeed;
 
             if (player.invulnerable === 0 && circleTouchesRect(target, player)) {
                 targets.splice(i, 1);
@@ -217,33 +231,77 @@ window.addEventListener('load', () => {
             }
         }
     }
-
+    function drawPlayer() {
+        ctx.save();
+        ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+        ctx.fillStyle = '#00e1ff';
+        ctx.shadowColor = '#00e1ff';
+        ctx.shadowBlur = 10;
+        ctx.fillRect(-12, 18, 6, 8 + Math.random() * 6);
+        ctx.fillRect(6, 18, 6, 8 + Math.random() * 6);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.moveTo(0, -24);
+        ctx.lineTo(8, -8);
+        ctx.lineTo(8, 20);
+        ctx.lineTo(-8, 20);
+        ctx.lineTo(-8, -8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#475569';
+        ctx.beginPath();
+        ctx.moveTo(0, -24);
+        ctx.lineTo(4, -10);
+        ctx.lineTo(-4, -10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(-3, -8, 6, 10)
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(8, -2, 16, 4);
+        ctx.fillRect(22, -18, 4, 20);
+        ctx.fillRect(-24, -2, 16, 4);
+        ctx.fillRect(-26, -18, 4, 20);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(12, 0, 6, 2);
+        ctx.fillRect(-18, 0, 6, 2);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(23, -24, 2, 10);
+        ctx.fillRect(-25, -24, 2, 10);
+        ctx.restore();
+    }
     function draw() {
         ctx.fillStyle = '#050510';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 
         if (player.invulnerable % 6 <= 3) {
-            ctx.fillStyle = '#2196F3';
-            ctx.beginPath();
-            ctx.moveTo(player.x + player.width / 2, player.y);
-            ctx.lineTo(player.x, player.y + player.height);
-            ctx.lineTo(player.x + player.width, player.y + player.height);
-            ctx.closePath();
-            ctx.fill();
+            drawPlayer();
         }
         
 
-        ctx.fillStyle = '#FFE81F';
+        ctx.fillStyle = '#00ff0d';
         lasers.forEach((laser) => {
             ctx.fillRect(laser.x, laser.y, laser.width, laser.height);
         });
 
-        ctx.fillStyle = '#888888';
         targets.forEach((target) => {
+            ctx.save();
+            ctx.translate(target.x, target.y);
+            ctx.rotate(target.rotation);
+            ctx.fillStyle = '#475569';
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
+            ctx.moveTo(target.points[0].x, target.points [0].y);
+            for (let i = 1; i < target.points.length; i++) {
+                ctx.lineTo(target.points[i].x, target.points[i].y);
+            }
+            ctx.closePath();
             ctx.fill();
+            ctx.stroke();
+            ctx.restore();
         });
 
         ctx.fillStyle = '#FFE81F';
