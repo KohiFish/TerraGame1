@@ -94,8 +94,10 @@ window.addEventListener('load', () => {
 
     const lasers = [];
     const targets = [];
+    const ties = [];
+    const enemyLaser = [];
     const keys = {};
-    const shootInterval = 350;
+    const shootInterval = 550;
     let lastShotTime = -shootInterval;
 
     const stars = [];
@@ -119,12 +121,14 @@ window.addEventListener('load', () => {
         player.invulnerable = 0;
         lasers.length = 0;
         targets.length = 0;
+        ties.length = 0;
+        enemyLaser.length = 0;
         lastShotTime = -shootInterval;
     }
 
     window.addEventListener('keydown', (event) => {
         keys[event.code] = true;
-
+        console.log(event.code);
         if (event.code === 'Space') {
             event.preventDefault();
             if (!event.repeat) sound.init();
@@ -205,6 +209,22 @@ window.addEventListener('load', () => {
         });
     }
 
+    function spawnTieFighter() {
+        if (gameOver) return;
+        const startX = Math.random() * (canvas.width - 36 - 120) + 60;
+        ties.push({
+            width: 36,
+            height: 36,
+            x: startX,
+            y: -50,
+            startX,
+            speedY: Math.random() * 1.5 + 2,
+            sineFreq: Math.random() * 0.04 + 0.02,
+            sineAmp: Math.random() * 2 + 1,
+            shootCooldown: Math.floor(Math.random() * 60) + 40
+        });
+    }
+
     function circleTouchesRect(circle, rect) {
         const closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
         const closestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.height));
@@ -227,15 +247,16 @@ window.addEventListener('load', () => {
         }
         frameCount++;
         if (frameCount % 72 === 0) spawnTarget();
+        if (frameCount % 150 === 0) spawnTieFighter();
         if (player.invulnerable > 0) player.invulnerable--;
 
         if (keys.ArrowRight || keys.KeyD) {
             player.x = Math.min(canvas.width - player.width, player.x + player.speed);
         }
-        if (keys.ArrowUp || keys.keyW) {
+        if (keys.ArrowUp || keys.KeyW) {
             player.y = Math.max(100, player.y - player.speed);
         }
-        if (keys.ArrowDown || keys. keyS) {
+        if (keys.ArrowDown || keys.KeyS) {
             player.y = Math.min(canvas.height - player.height - 20, player.y + player.speed);
         }
 
@@ -250,6 +271,30 @@ window.addEventListener('load', () => {
             if (lasers[i].y + lasers[i].height < 0) {
                 lasers.splice(i, 1);
             }
+        }
+
+        for (let i = enemyLaser.length - 1; i >= 0; i--) {
+            const laser = enemyLaser[i];
+            laser.y += laser.speed;
+            if (laser.y > canvas.height) {
+                enemyLaser.splice(i, 1);
+                continue;
+            }
+            if (player.invulnerable === 0 &&
+                laser.x < player.x + player.width &&
+                laser.x + laser.width > player.x &&
+                laser.y < player.y + player.height &&
+                laser.y + laser.height > player.y) {
+                    enemyLaser.splice(i, 1);
+                    lives--;
+                    sound.playExplosion(true);
+                    if (lives <= 0) {
+                        gameOver = true;
+                        return;
+                    }
+                    player.invulnerable = 90;
+                }
+            
         }
 
         for (let i = targets.length - 1; i >= 0; i--) {
@@ -285,7 +330,55 @@ window.addEventListener('load', () => {
                 targets.splice(i, 1);
             }
         }
+        for (let i = ties.length - 1; i >= 0; i--) {
+            const tie = ties[i];
+            tie.y +=tie.speedY;
+            tie.x = tie.startX + Math.sin(tie.y * tie.sineFreq) * tie.sineAmp * 20;
+            tie.shootCooldown--;
+            if (tie.shootCooldown <= 0 && tie.y > 50 && tie.y < canvas.height - 200) {
+                enemyLaser.push({
+                    x: tie.x + tie.width / 2 - 2,
+                    y: tie.y + tie.height,
+                    width: 4,
+                    height: 16,
+                    speed: 7
+                });
+                sound.playerLaser(true);
+                tie.shootCooldown = Math.floor(Math.random() * 80) + 60;
+            }
+            const body = {
+                x: tie.x + tie.width / 2,
+                y: tie.y + tie.height / 2,
+                radius: tie.width / 2
+            };
+            if (player.invulnerable === 0 && circleTouchesRect(body, player)) {
+                ties.splice(i, 1);
+                lives--;
+                sound.playExplosion(true);
+                if (lives <= 0) {
+                    gameOver = true;
+                    return;
+                }
+                player.invulnerable = 90;
+                continue;
+            }
+            let hit = false;
+            for (let j = lasers.length - 1; j >= 0; j--) {
+                if (circleTouchesRect(body, lasers[j])) {
+                    ties.splice(i ,1);
+                    lasers.splice(j, 1);
+                    score += 30;
+                    sound.playExplosion();
+                    hit = true;
+                    break;
+                }
+            }
+            if (!hit && tie.y > canvas.height + 50) {
+                ties.splice(i, 1);
+            }
+        }
     }
+    
     function drawPlayer() {
         ctx.save();
         ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
@@ -326,6 +419,32 @@ window.addEventListener('load', () => {
         ctx.fillRect(-25, -24, 2, 10);
         ctx.restore();
     }
+
+    function drawTie(tie) {
+        ctx.save();
+        ctx.translate(tie.x + tie.width / 2, tie.y + tie.height / 2);
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = '#94a3b8'
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(-18, -16, 4, 32);
+        ctx.strokeRect(-18, -16, 4, 32);
+        ctx.fillRect(14, -16, 4, 32);
+        ctx.strokeRect(14, -16, 4, 32);
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(-14, -2, 28, 4);
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#00f0ff';
+        ctx.beginPath();
+        ctx.arc(0, 0, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+    }
+
     function draw() {
         ctx.fillStyle = '#050510';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -347,6 +466,15 @@ window.addEventListener('load', () => {
             ctx.fillRect(laser.x, laser.y, laser.width, laser.height);
         });
 
+        ctx.save();
+        ctx.fillStyle = '#ff0044';
+        ctx.shadowColor = '#ff0044';
+        ctx.shadowBlur = 10;
+        enemyLaser.forEach((laser) => {
+            ctx.fillRect(laser.x, laser.y, laser.width, laser.height);
+        });
+        ctx.restore();
+
         targets.forEach((target) => {
             ctx.save();
             ctx.translate(target.x, target.y);
@@ -364,6 +492,8 @@ window.addEventListener('load', () => {
             ctx.stroke();
             ctx.restore();
         });
+
+        ties.forEach(drawTie);
 
         ctx.fillStyle = '#FFE81F';
         ctx.font = '20px Fantasque Sans Mono';
