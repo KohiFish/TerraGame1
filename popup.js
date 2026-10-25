@@ -496,7 +496,7 @@ window.addEventListener('load', () => {
         ties.forEach(drawTie);
 
         ctx.fillStyle = '#FFE81F';
-        ctx.font = '20px Fantasque Sans Mono';
+        ctx.font = '20px "Fantasque Sans Mono", monospace';
         ctx.textAlign = 'left';
         ctx.fillText(`SCORE: ${score}`, 10, 25);
         ctx.textAlign = 'right';
@@ -507,10 +507,10 @@ window.addEventListener('load', () => {
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.textAlign = 'center';
             ctx.fillStyle = '#FF0055';
-            ctx.font = '30px Fantasque Sans Mono';
+            ctx.font = '30px "Fantasque Sans Mono", monospace';
             ctx.fillText('DEFEATED', canvas.width / 2, 150);
             ctx.fillStyle = '#FFE81F';
-            ctx.font = '16px Fantasque Sans Mono';
+            ctx.font = '16px "Fantasque Sans Mono", monospace';
             ctx.fillText(`FINAL SCORE: ${score}`, canvas.width / 2, 195);
 
             ctx.fillStyle = hoveringButton ? '#af9e00' : '#000000';
