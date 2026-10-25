@@ -98,12 +98,24 @@ window.addEventListener('load', () => {
     const shootInterval = 350;
     let lastShotTime = -shootInterval;
 
+    const stars = [];
+    for (let i = 0; i < 120; i++) {
+        stars.push({
+            x: Math.random() * GAME_WIDTH,
+            y: Math.random() * GAME_HEIGHT,
+            size: Math.random() * 2 + 0.5,
+            speed: Math.random() * 3 + 0.5,
+            alpha: Math.random() * 0.8 + 0.2
+        })
+    }
+
     function resetGame() {
         score = 0;
         lives = 3;
         gameOver= false;
         frameCount = 0;
         player.x = canvas.width / 2 - player.width / 2;
+        player.y = canvas.height - 100;
         player.invulnerable = 0;
         lasers.length = 0;
         targets.length = 0;
@@ -116,6 +128,9 @@ window.addEventListener('load', () => {
         if (event.code === 'Space') {
             event.preventDefault();
             if (!event.repeat) sound.init();
+        }
+        if (event.code.startsWith('Arrow')) {
+            event.preventDefault();
         }
     });
     
@@ -197,6 +212,14 @@ window.addEventListener('load', () => {
     }
 
     function update() {
+        stars.forEach((star) => {
+            star.y += star.speed;
+            if (star.y > GAME_HEIGHT) {
+                star.y = 0;
+                star.x = Math.random() * GAME_WIDTH;
+            }
+        });
+
         if (gameOver) return;
 
         if (keys.ArrowLeft || keys.KeyA) {
@@ -208,6 +231,12 @@ window.addEventListener('load', () => {
 
         if (keys.ArrowRight || keys.KeyD) {
             player.x = Math.min(canvas.width - player.width, player.x + player.speed);
+        }
+        if (keys.ArrowUp || keys.keyW) {
+            player.y = Math.max(100, player.y - player.speed);
+        }
+        if (keys.ArrowDown || keys. keyS) {
+            player.y = Math.min(canvas.height - player.height - 20, player.y + player.speed);
         }
 
         const now = performance.now();
@@ -301,6 +330,12 @@ window.addEventListener('load', () => {
         ctx.fillStyle = '#050510';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        ctx.fillStyle = '#ffffff';
+        stars.forEach((star) => {
+            ctx.globalAlpha = star.alpha;
+            ctx.fillRect(star.x, star.y, star.size, star.size);
+        });
+        ctx.globalAlpha = 1;
 
         if (player.invulnerable % 6 <= 3) {
             drawPlayer();
