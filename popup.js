@@ -106,7 +106,7 @@ window.addEventListener('load', () => {
         player.x = canvas.width / 2 - player.width / 2;
         player.invulnerable = 0;
         lasers.length = 0;
-        target.length = 0;
+        targets.length = 0;
         lastShotTime = -shootInterval;
     }
 
@@ -117,11 +117,37 @@ window.addEventListener('load', () => {
             event.preventDefault();
             if (!event.repeat) sound.init();
         }
-        if (event.code === 'Enter') {
-            sound.init();
-            resetGame();
-        }
     });
+    
+    const restartButton = { x: canvas.width / 2 - 100, y: 250, width: 200, height: 44};
+    let hoveringButton = false;
+    function getMousePos(event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: (event.clientX - rect.left) * (canvas.width / rect.width),
+            y: (event.clientY - rect.top) * (canvas.height / rect.height)
+        } ;
+    }
+
+        function overRestartButton(event) {
+            const pos = getMousePos(event);
+            return gameOver &&
+                pos.x >= restartButton.x && pos.x <= restartButton.x + restartButton.width &&
+                pos.y >= restartButton.y && pos.y <= restartButton.y + restartButton.height;
+        }
+
+        canvas.addEventListener('mousemove', (event) => {
+            hoveringButton = overRestartButton(event);
+            canvas.style.cursor = hoveringButton ? 'pointer' : 'default';
+        });
+        canvas.addEventListener('click', (event) => {
+            if (overRestartButton(event)) {
+                sound.init();
+                resetGame();
+                hoveringButton = false;
+                canvas.style.cursor = 'default';
+            }
+        });
 
     window.addEventListener('keyup', (event) => {
         keys[event.code] = false;
@@ -312,13 +338,23 @@ window.addEventListener('load', () => {
         ctx.fillText(`LIVES: ${lives}`, canvas.width - 10, 25);
 
         if (gameOver) {
-            ctx.fillStyle = '#FF0055';
-            ctx.font = '20px Fantasque Sans Mono';
+            ctx.fillStyle = '#000000cc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.textAlign = 'center';
-            ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+            ctx.fillStyle = '#FF0055';
+            ctx.font = '30px Fantasque Sans Mono';
+            ctx.fillText('DEFEATED', canvas.width / 2, 150);
+            ctx.fillStyle = '#FFE81F';
             ctx.font = '16px Fantasque Sans Mono';
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillText('Press ENTER to try again', canvas.width / 2, canvas.height / 2 + 40);
+            ctx.fillText(`FINAL SCORE: ${score}`, canvas.width / 2, 195);
+
+            ctx.fillStyle = hoveringButton ? '#af9e00' : '#000000';
+            ctx.fillRect(restartButton.x, restartButton.y, restartButton.width, restartButton.height);
+            ctx.strokeStyle= '#FFE81F';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(restartButton.x, restartButton.y, restartButton.width, restartButton.height);
+            ctx.fillStyle = hoveringButton ? '#000000' : '#FFE81F';
+            ctx.fillText('REPLAY', canvas.width / 2, restartButton.y + 28);
         }
     }
 
