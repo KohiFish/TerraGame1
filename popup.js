@@ -125,6 +125,35 @@ window.addEventListener('load', () => {
             }
         },
         {
+            name: 'Y-Wing',
+            cannons: [-14, 14],
+            draw() {
+                drawThrusters('#f59e0b', 22, [[-17, 6], [11, 6]]);
+                ctx.fillStyle = '#a8a29e';
+                ctx.fillRect(-18, -6, 8, 28);
+                ctx.fillRect(10, -6, 8, 28);
+                ctx.fillStyle = '#78716c';
+                ctx.fillRect(-10, 4, 5, 5);
+                ctx.fillRect(5, 4, 5, 5);
+                ctx.fillStyle = '#d6c9a0';
+                ctx.fillRect(-5, -20, 10, 38);
+                ctx.beginPath();
+                ctx.moveTo(0, -27);
+                ctx.lineTo(5, -20);
+                ctx.lineTo(-5, -20);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(-3, -16, 6, 8);
+                ctx.fillStyle = '#eab308';
+                ctx.fillRect(-17, 0, 6, 3);
+                ctx.fillRect(11, 0, 6, 3);
+                ctx.fillStyle = '#e2e8f0';
+                ctx.fillRect(-15, -12, 2, 8);
+                ctx.fillRect(13, -12, 2, 8);
+            }
+        },
+        {
             name: 'A-Wing',
             cannons: [-22, 22],
             draw() {
@@ -188,6 +217,40 @@ window.addEventListener('load', () => {
                 ctx.fillStyle = '#e2e8f0';
                 ctx.fillRect(-10, -30, 2, 6);
                 ctx.fillRect(8, -30, 2, 6);
+            }
+        },
+        {
+            name: 'Raider',
+            cannons: [-18, 18],
+            draw() {
+                drawThrusters('#e879f9', 16, [[-7, 5], [2, 5]]);
+                ctx.fillStyle = '#1e1b2e';
+                ctx.strokeStyle = '#a855f7';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(0, -26);
+                ctx.lineTo(10, 0);
+                ctx.lineTo(26, 22);
+                ctx.lineTo(8, 14);
+                ctx.lineTo(0, 22);
+                ctx.lineTo(-8, 14);
+                ctx.lineTo(-26, 22);
+                ctx.lineTo(-10, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = '#a855f7';
+                ctx.fillRect(-1, -14, 2, 22);
+                ctx.fillStyle = '#f0abfc';
+                ctx.beginPath();
+                ctx.moveTo(0, -10);
+                ctx.lineTo(4, 0);
+                ctx.lineTo(-4, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#e879f9';
+                ctx.fillRect(17, 8, 2, 10);
+                ctx.fillRect(-19, 8, 2, 10);
             }
         }
     ];
