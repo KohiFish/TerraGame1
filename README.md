@@ -11,6 +11,10 @@ https://kohifish.github.io/TerraGame1/
 
 Move: W A S D or arrow keys  |  Fire: Space
 Destroy asteroids and TIE fighters to earn points!
+<img width="892" height="1162" alt="image" src="https://github.com/user-attachments/assets/a80f5556-aca0-4501-bdc6-50b71479b4b5" />
+<img width="848" height="1110" alt="image" src="https://github.com/user-attachments/assets/60115147-9281-4715-835b-4b28f19adb9a" />
+
+
 
 
 
