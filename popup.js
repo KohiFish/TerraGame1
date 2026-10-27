@@ -596,7 +596,7 @@ window.addEventListener('load', () => {
         ctx.fillStyle = hover ? '#000000' : '#FFE81F';
         ctx.font = `12px ${FONT}`;
         ctx.textAlign = 'center';
-        ctx.fillText('SETTINGS', settingButton.x + settingButton.width / 2, settingButton.y + 18);
+        ctx.fillText('SHIPS', settingButton.x + settingButton.width / 2, settingButton.y + 18);
     }
     function drawSettingsMenu() {
         const cx = canvas.width / 2;
@@ -605,7 +605,7 @@ window.addEventListener('load', () => {
         ctx.textAlign = 'center';
         ctx.fillStyle = '#FFE81F';
         ctx.font = `24px ${FONT}`;
-        ctx.fillText('SELECT YOU SHIP', cx, 55);
+        ctx.fillText('SELECT YOUR SHIP', cx, 55);
         ships.forEach((ship, i) => {
             const card = shipCards[i];
             const selected = i === selectedShip;
